@@ -5,13 +5,26 @@ variable "domain_name" {
 
 variable "vpc" {
   type = object({
-    vpc_id            = string
-    public_subnet_ids = list(string)
+    vpc_id             = string
+    public_subnet_ids  = list(string)
+    private_subnet_ids = optional(list(string), [])
   })
   description = <<-EOD
     VPC related inputs:
       vpc_id: VPC where the load balancer and target group are created
       public_subnet_ids: Subnet IDs (one per AZ) where the internet-facing ALB is placed
+      private_subnet_ids: Subnet IDs (one per AZ) where the ALB is placed when internal is true
+  EOD
+}
+
+variable "internal" {
+  type        = bool
+  default     = false
+  description = <<-EOD
+    Place the user ALB on an internal scheme, reachable only from inside the VPC
+    (e.g. over a VPN or Direct Connect) with no public address. Requires
+    vpc.private_subnet_ids. The ALB security group is then scoped to the VPC
+    CIDR rather than open to the internet.
   EOD
 }
 

@@ -54,25 +54,34 @@ resource "aws_acm_certificate_validation" "cert_valid_status" {
   certificate_arn = aws_acm_certificate.cert[0].arn
 }
 
+data "aws_vpc" "this" {
+  count = var.internal ? 1 : 0
+  id    = var.vpc.vpc_id
+}
+
+locals {
+  alb_ingress_cidrs = var.internal ? [data.aws_vpc.this[0].cidr_block] : ["0.0.0.0/0"]
+}
+
 resource "aws_security_group" "alb" {
   name        = "${replace(var.domain_name, ".", "-")}-alb"
   description = "Ingress for user-facing application load balancer"
   vpc_id      = var.vpc.vpc_id
 
   ingress {
-    description = "HTTPS from internet"
+    description = var.internal ? "HTTPS from within the VPC" : "HTTPS from internet"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = local.alb_ingress_cidrs
   }
 
   ingress {
-    description = "HTTP from internet"
+    description = var.internal ? "HTTP from within the VPC" : "HTTP from internet"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = local.alb_ingress_cidrs
   }
 
   egress {
@@ -95,8 +104,9 @@ resource "aws_vpc_security_group_ingress_rule" "retool_from_alb" {
 resource "aws_lb" "alb" {
   name               = local.alb_name
   load_balancer_type = "application"
+  internal           = var.internal
   security_groups    = [aws_security_group.alb.id]
-  subnets            = var.vpc.public_subnet_ids
+  subnets            = var.internal ? var.vpc.private_subnet_ids : var.vpc.public_subnet_ids
 }
 
 resource "aws_lb_target_group" "alb_target_group" {
