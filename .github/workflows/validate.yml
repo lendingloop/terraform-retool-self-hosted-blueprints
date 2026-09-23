@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # GNU parallel, not the unrelated moreutils `parallel` of the same name.
       # The Makefile's require-parallel target verifies we got the right one.
@@ -35,7 +35,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y parallel
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           # Matches the version used locally. Bump deliberately: a newer
           # Terraform or newer providers can surface new validation errors.
