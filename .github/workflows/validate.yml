@@ -26,7 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       # GNU parallel, not the unrelated moreutils `parallel` of the same name.
       # The Makefile's require-parallel target verifies we got the right one.
